@@ -1,0 +1,37 @@
+import time
+from seeed_dht import DHT
+from grove.display.jhd1802 import JHD1802
+from urllib import request, parse
+from time import sleep
+
+#API key Write: 32R7VGYJS78FWA09
+#API key Read: BP08RMP800QRISUJ
+
+def make_param_thinkspeak(temp, humi):
+    params = parse.urlencode({ 'field1': temp, 'field2': humi }).encode();
+    return params
+
+def thinkspeak_post(params):
+    api_key_write = "32R7VGYJS78FWA09"
+    req = request.Request('https://api.thingspeak.com/update', method = "POST")
+    req.add_header("Content-Type", "application/x-www-form-urlencoded")
+    req.add_header("X-THINGSPEAKAPIKEY", api_key_write)
+    r = request.urlopen(req, data = params)
+    response_data = r.read()
+    return response_data
+    
+sensor = DHT('11', 5)
+lcd = JHD1802()
+    
+while True:
+    humi, temp = sensor.read()
+    lcd.setCursor(0, 0)
+    lcd.write('Nhiet do: {}C'.format(temp))
+    lcd.setCursor(1, 0)
+    lcd.write('Do am: {}%'.format(humi))
+    
+    params_thinkspeak = make_param_thinkspeak(temp, humi)
+    thinkspeak_post(params_thinkspeak)
+    
+    sleep(20)
+
